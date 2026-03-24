@@ -12,31 +12,67 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
+const prisma_service_1 = require("../../prisma/prisma.service");
 const bcrypt = require("bcrypt");
 let AuthService = class AuthService {
     jwt;
-    users = [
-        {
-            id: "dev-user",
-            email: "admin@example.com",
-            passwordHash: bcrypt.hashSync("admin123", 10),
-            role: "admin",
-        },
-    ];
-    constructor(jwt) {
+    prisma;
+    constructor(jwt, prisma) {
         this.jwt = jwt;
+        this.prisma = prisma;
     }
-    async validateUser(email, password) {
-        const user = this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    sanitizeCpf(identifier) {
+        const digits = identifier.replace(/\D/g, "");
+        return digits.length ? digits : null;
+    }
+    sanitizeUser(user) {
+        return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            cpf: user.cpf,
+            role: user.role,
+            avatarUrl: user.avatarUrl,
+            phone: user.phone,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+    }
+    async validateUser(identifier, password) {
+        const cpf = this.sanitizeCpf(identifier);
+        const user = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        email: {
+                            equals: identifier,
+                            mode: "insensitive",
+                        },
+                    },
+                    ...(cpf
+                        ? [
+                            {
+                                cpf: {
+                                    equals: cpf,
+                                },
+                            },
+                        ]
+                        : []),
+                ],
+            },
+        });
         if (!user)
+            return null;
+        if (!user.isActive)
             return null;
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok)
             return null;
-        return { id: user.id, email: user.email, role: user.role };
+        return user;
     }
-    async login(email, password) {
-        const user = await this.validateUser(email, password);
+    async login(identifier, password) {
+        const user = await this.validateUser(identifier, password);
         if (!user)
             throw new common_1.UnauthorizedException("Invalid credentials");
         const accessToken = await this.jwt.signAsync({
@@ -44,12 +80,23 @@ let AuthService = class AuthService {
             email: user.email,
             role: user.role,
         });
-        return { accessToken, user };
+        return { accessToken, user: this.sanitizeUser(user) };
+    }
+    async me(userId) {
+        if (!userId)
+            throw new common_1.UnauthorizedException("Invalid token");
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user)
+            throw new common_1.UnauthorizedException("Invalid token");
+        if (!user.isActive)
+            throw new common_1.UnauthorizedException("Inactive user");
+        return this.sanitizeUser(user);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [jwt_1.JwtService])
+    __metadata("design:paramtypes", [jwt_1.JwtService,
+        prisma_service_1.PrismaService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

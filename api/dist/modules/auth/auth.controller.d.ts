@@ -7,8 +7,31 @@ export declare class AuthController {
         accessToken: string;
         user: {
             id: string;
+            name: string;
             email: string;
-            role: string;
+            cpf: string | null;
+            role: any;
+            avatarUrl: string | null;
+            phone: string | null;
+            isActive: boolean;
+            createdAt: Date;
+            updatedAt: Date;
         };
+    }>;
+    me(req: {
+        user?: {
+            sub?: string;
+        };
+    }): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        cpf: string | null;
+        role: any;
+        avatarUrl: string | null;
+        phone: string | null;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

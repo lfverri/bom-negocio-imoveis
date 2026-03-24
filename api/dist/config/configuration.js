@@ -6,7 +6,7 @@ exports.default = () => ({
     },
     jwt: {
         secret: process.env.JWT_SECRET ?? "dev_secret_change_me",
-        expiresIn: process.env.JWT_EXPIRES_IN ?? "1d",
+        expiresIn: process.env.JWT_EXPIRES_IN ?? "4h",
     },
     sicoob: {
         baseUrl: process.env.SICOOB_BASE_URL,

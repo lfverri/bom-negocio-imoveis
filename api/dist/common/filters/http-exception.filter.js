@@ -17,14 +17,27 @@ let HttpExceptionFilter = class HttpExceptionFilter {
         const status = isHttpException
             ? exception.getStatus()
             : common_1.HttpStatus.INTERNAL_SERVER_ERROR;
-        const body = isHttpException
+        const rawBody = isHttpException
             ? exception.getResponse()
             : { message: "Internal server error" };
+        const normalizeMessage = (value) => {
+            if (typeof value === "string")
+                return value;
+            if (Array.isArray(value))
+                return value.map(String).join(", ");
+            if (value && typeof value === "object") {
+                const msg = value.message;
+                if (typeof msg === "string")
+                    return msg;
+                if (Array.isArray(msg))
+                    return msg.map(String).join(", ");
+            }
+            return "Request failed";
+        };
         response.status(status).json({
-            success: false,
             statusCode: status,
+            message: normalizeMessage(rawBody),
             path: request?.url,
-            error: body,
             timestamp: new Date().toISOString(),
         });
     }
