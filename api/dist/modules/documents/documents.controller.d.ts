@@ -2,5 +2,5 @@ import { DocumentsService } from "./documents.service";
 export declare class DocumentsController {
     private readonly documents;
     constructor(documents: DocumentsService);
-    list(): never[];
+    list(): Promise<Record<string, unknown>[]>;
 }

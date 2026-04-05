@@ -1,9 +1,9 @@
-import { PrismaService } from "../../prisma/prisma.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { UsersRepository } from "./users.repository";
 export declare class UsersService {
-    private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly usersRepo;
+    constructor(usersRepo: UsersRepository);
     private toPublicUser;
     list(): Promise<{
         id: string;

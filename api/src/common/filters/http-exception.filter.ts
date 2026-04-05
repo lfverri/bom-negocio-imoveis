@@ -4,10 +4,13 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -30,13 +33,28 @@ export class HttpExceptionFilter implements ExceptionFilter {
         if (typeof msg === "string") return msg;
         if (Array.isArray(msg)) return msg.map(String).join(", ");
       }
-      return "Request failed";
+      return status === HttpStatus.INTERNAL_SERVER_ERROR
+        ? "Internal server error"
+        : "Request failed";
     };
+
+    const method = (request as any)?.method ?? "UNKNOWN";
+    const path = (request as any)?.url ?? "";
+    const message = normalizeMessage(rawBody);
+
+    if (status >= 500) {
+      this.logger.error(
+        `${method} ${path} -> ${status} ${message}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else {
+      this.logger.warn(`${method} ${path} -> ${status} ${message}`);
+    }
 
     response.status(status).json({
       statusCode: status,
-      message: normalizeMessage(rawBody),
-      path: (request as any)?.url,
+      message,
+      path,
       timestamp: new Date().toISOString(),
     });
   }

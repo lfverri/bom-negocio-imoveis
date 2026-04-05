@@ -1,8 +1,12 @@
 import { Injectable } from "@nestjs/common";
+import { BaseRepository } from "../../common/base.repository";
+import { PrismaService } from "../../prisma/prisma.service";
 
 @Injectable()
-export class DocumentsRepository {
-  findMany() {
-    return [];
+export class DocumentsRepository extends BaseRepository<
+  Record<string, unknown>
+> {
+  constructor(prisma: PrismaService) {
+    super(prisma.document as any);
   }
 }

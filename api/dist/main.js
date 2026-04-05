@@ -5,6 +5,7 @@ const core_1 = require("@nestjs/core");
 const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const logging_interceptor_1 = require("./common/interceptors/logging.interceptor");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const corsOriginEnv = process.env.CORS_ORIGIN || process.env.WEB_ORIGIN;
@@ -31,7 +32,7 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
     }));
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
-    app.useGlobalInterceptors(new common_1.ClassSerializerInterceptor(app.get(core_1.Reflector)));
+    app.useGlobalInterceptors(new logging_interceptor_1.LoggingInterceptor(), new common_1.ClassSerializerInterceptor(app.get(core_1.Reflector)));
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle("Real State API")
         .setDescription("API documentation")

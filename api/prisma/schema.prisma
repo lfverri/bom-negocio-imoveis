@@ -208,6 +208,8 @@ model User {
   email         String   @unique
   cpf           String?  @unique
   passwordHash  String   @map("password_hash")
+  passwordResetTokenHash String? @unique @map("password_reset_token_hash")
+  passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
   role          UserRole @default(AGENT)
   avatarUrl     String?  @map("avatar_url")
   phone         String?

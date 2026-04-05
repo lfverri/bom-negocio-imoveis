@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
 import * as bcrypt from "bcrypt";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { UsersRepository } from "./users.repository";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly usersRepo: UsersRepository) {}
 
   private toPublicUser(user: {
     id: string;
@@ -35,14 +35,14 @@ export class UsersService {
   }
 
   async list() {
-    const users = await this.prisma.user.findMany({
+    const users = await this.usersRepo.findMany({
       orderBy: { createdAt: "desc" },
     });
     return users.map((u) => this.toPublicUser(u));
   }
 
   async getById(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
+    const user = await this.usersRepo.findById(id);
     if (!user) throw new NotFoundException("User not found");
     return this.toPublicUser(user);
   }
@@ -51,16 +51,14 @@ export class UsersService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const cpf = dto.cpf ? dto.cpf.replace(/\D/g, "") : undefined;
 
-    const user = await this.prisma.user.create({
-      data: {
-        name: dto.name,
-        email: dto.email,
-        cpf: cpf || undefined,
-        phone: dto.phone,
-        avatarUrl: dto.avatarUrl,
-        role: dto.role,
-        passwordHash,
-      },
+    const user = await this.usersRepo.create({
+      name: dto.name,
+      email: dto.email,
+      cpf: cpf || undefined,
+      phone: dto.phone,
+      avatarUrl: dto.avatarUrl,
+      role: dto.role,
+      passwordHash,
     });
 
     return this.toPublicUser(user);
@@ -72,25 +70,18 @@ export class UsersService {
       ? await bcrypt.hash(dto.password, 10)
       : undefined;
 
-    try {
-      const user = await this.prisma.user.update({
-        where: { id },
-        data: {
-          name: dto.name,
-          email: dto.email,
-          cpf: cpf === undefined ? undefined : cpf || null,
-          phone: dto.phone,
-          avatarUrl: dto.avatarUrl,
-          role: dto.role,
-          isActive: dto.isActive,
-          passwordHash,
-        },
-      });
+    const user = await this.usersRepo.update(id, {
+      name: dto.name,
+      email: dto.email,
+      cpf: cpf === undefined ? undefined : cpf || null,
+      phone: dto.phone,
+      avatarUrl: dto.avatarUrl,
+      role: dto.role,
+      isActive: dto.isActive,
+      passwordHash,
+    });
 
-      return this.toPublicUser(user);
-    } catch (e) {
-      throw new NotFoundException("User not found");
-    }
+    return this.toPublicUser(user);
   }
 
   async remove(id: string) {

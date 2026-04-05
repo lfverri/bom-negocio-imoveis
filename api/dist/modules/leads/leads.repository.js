@@ -5,22 +5,37 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LeadsRepository = void 0;
 const common_1 = require("@nestjs/common");
-let LeadsRepository = class LeadsRepository {
-    leads = [];
-    findMany() {
-        return this.leads;
+const client_1 = require("@prisma/client");
+const base_repository_1 = require("../../common/base.repository");
+const prisma_service_1 = require("../../prisma/prisma.service");
+let LeadsRepository = class LeadsRepository extends base_repository_1.BaseRepository {
+    prisma;
+    constructor(prisma) {
+        super(prisma.lead);
+        this.prisma = prisma;
     }
-    create(data) {
-        const created = { id: String(Date.now()), ...data };
-        this.leads.push(created);
-        return created;
+    async create(data) {
+        return this.prisma.lead.create({
+            data: {
+                name: data.name || "Lead sem nome",
+                email: data.email || "lead@placeholder.local",
+                phone: "0000000000",
+                source: client_1.LeadSource.OTHER,
+                interestType: client_1.LeadInterestType.RENT,
+                preferredRegions: [],
+            },
+        });
     }
 };
 exports.LeadsRepository = LeadsRepository;
 exports.LeadsRepository = LeadsRepository = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], LeadsRepository);
 //# sourceMappingURL=leads.repository.js.map

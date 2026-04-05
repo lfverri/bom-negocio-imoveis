@@ -11,12 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersService = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../../prisma/prisma.service");
 const bcrypt = require("bcrypt");
+const users_repository_1 = require("./users.repository");
 let UsersService = class UsersService {
-    prisma;
-    constructor(prisma) {
-        this.prisma = prisma;
+    usersRepo;
+    constructor(usersRepo) {
+        this.usersRepo = usersRepo;
     }
     toPublicUser(user) {
         return {
@@ -33,13 +33,13 @@ let UsersService = class UsersService {
         };
     }
     async list() {
-        const users = await this.prisma.user.findMany({
+        const users = await this.usersRepo.findMany({
             orderBy: { createdAt: "desc" },
         });
         return users.map((u) => this.toPublicUser(u));
     }
     async getById(id) {
-        const user = await this.prisma.user.findUnique({ where: { id } });
+        const user = await this.usersRepo.findById(id);
         if (!user)
             throw new common_1.NotFoundException("User not found");
         return this.toPublicUser(user);
@@ -47,16 +47,14 @@ let UsersService = class UsersService {
     async create(dto) {
         const passwordHash = await bcrypt.hash(dto.password, 10);
         const cpf = dto.cpf ? dto.cpf.replace(/\D/g, "") : undefined;
-        const user = await this.prisma.user.create({
-            data: {
-                name: dto.name,
-                email: dto.email,
-                cpf: cpf || undefined,
-                phone: dto.phone,
-                avatarUrl: dto.avatarUrl,
-                role: dto.role,
-                passwordHash,
-            },
+        const user = await this.usersRepo.create({
+            name: dto.name,
+            email: dto.email,
+            cpf: cpf || undefined,
+            phone: dto.phone,
+            avatarUrl: dto.avatarUrl,
+            role: dto.role,
+            passwordHash,
         });
         return this.toPublicUser(user);
     }
@@ -65,25 +63,17 @@ let UsersService = class UsersService {
         const passwordHash = dto.password
             ? await bcrypt.hash(dto.password, 10)
             : undefined;
-        try {
-            const user = await this.prisma.user.update({
-                where: { id },
-                data: {
-                    name: dto.name,
-                    email: dto.email,
-                    cpf: cpf === undefined ? undefined : cpf || null,
-                    phone: dto.phone,
-                    avatarUrl: dto.avatarUrl,
-                    role: dto.role,
-                    isActive: dto.isActive,
-                    passwordHash,
-                },
-            });
-            return this.toPublicUser(user);
-        }
-        catch (e) {
-            throw new common_1.NotFoundException("User not found");
-        }
+        const user = await this.usersRepo.update(id, {
+            name: dto.name,
+            email: dto.email,
+            cpf: cpf === undefined ? undefined : cpf || null,
+            phone: dto.phone,
+            avatarUrl: dto.avatarUrl,
+            role: dto.role,
+            isActive: dto.isActive,
+            passwordHash,
+        });
+        return this.toPublicUser(user);
     }
     async remove(id) {
         return this.update(id, { isActive: false });
@@ -92,6 +82,6 @@ let UsersService = class UsersService {
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [users_repository_1.UsersRepository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

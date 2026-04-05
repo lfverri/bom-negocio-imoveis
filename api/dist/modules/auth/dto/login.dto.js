@@ -18,6 +18,7 @@ class LoginDto {
 exports.LoginDto = LoginDto;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(120),
     __metadata("design:type", String)
 ], LoginDto.prototype, "identifier", void 0);
 __decorate([
