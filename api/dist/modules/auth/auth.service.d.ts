@@ -12,7 +12,7 @@ export declare class AuthService {
         email: string;
         cpf: string | null;
         passwordHash: string;
-        role: import(".prisma/client").$Enums.UserRole;
+        role: import("@prisma/client").$Enums.UserRole;
         avatarUrl: string | null;
         phone: string | null;
         isActive: boolean;
