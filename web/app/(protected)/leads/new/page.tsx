@@ -1,80 +1,95 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { apiClient } from "@/lib/api-client"
-import { formatPhone } from "@/lib/format-utils"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api-client";
+import { formatPhone } from "@/lib/format-utils";
 
 export default function NewLeadPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: "",
+    name: "",
     phone: "",
     email: "",
     source: "WEBSITE",
     status: "NEW",
-    interest_property_type: "",
-    interest_region: "",
-    budget_min: "",
-    budget_max: "",
-    assigned_user_id: "",
+    interestType: "BUY",
+    preferredRegions: "",
+    expectedBudgetMin: "",
+    expectedBudgetMax: "",
+    assignedToId: "",
     notes: "",
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Validate budget
-    const budgetMin = formData.budget_min ? Number.parseFloat(formData.budget_min) : undefined
-    const budgetMax = formData.budget_max ? Number.parseFloat(formData.budget_max) : undefined
+    const budgetMin = formData.expectedBudgetMin
+      ? Number.parseFloat(formData.expectedBudgetMin)
+      : undefined;
+    const budgetMax = formData.expectedBudgetMax
+      ? Number.parseFloat(formData.expectedBudgetMax)
+      : undefined;
 
     if (budgetMin && budgetMax && budgetMax < budgetMin) {
       toast({
         title: "Invalid Budget",
         description: "Maximum budget must be greater than minimum budget",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       await apiClient.request("/leads", {
         method: "POST",
         body: JSON.stringify({
           ...formData,
-          budget_min: budgetMin,
-          budget_max: budgetMax,
+          expectedBudgetMin: budgetMin,
+          expectedBudgetMax: budgetMax,
+          preferredRegions: formData.preferredRegions
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
         }),
-      })
+      });
 
       toast({
         title: "Lead Created",
         description: "The lead has been successfully created",
-      })
-      router.push("/leads")
+      });
+      router.push("/leads");
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create lead",
+        description:
+          error instanceof Error ? error.message : "Failed to create lead",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="p-6 space-y-6 max-w-4xl">
@@ -96,13 +111,15 @@ export default function NewLeadPage() {
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="full_name">
+                <Label htmlFor="name">
                   Full Name <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -112,7 +129,12 @@ export default function NewLeadPage() {
                 <Input
                   id="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      phone: formatPhone(e.target.value),
+                    })
+                  }
                   placeholder="(11) 98765-4321"
                 />
               </div>
@@ -123,7 +145,9 @@ export default function NewLeadPage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
 
@@ -131,7 +155,12 @@ export default function NewLeadPage() {
                 <Label htmlFor="source">
                   Source <span className="text-destructive">*</span>
                 </Label>
-                <Select value={formData.source} onValueChange={(value) => setFormData({ ...formData, source: value })}>
+                <Select
+                  value={formData.source}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, source: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -147,7 +176,12 @@ export default function NewLeadPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -162,56 +196,78 @@ export default function NewLeadPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="interest_property_type">Property Type Interest</Label>
+                <Label htmlFor="interest_property_type">
+                  Property Type Interest
+                </Label>
                 <Select
-                  value={formData.interest_property_type}
-                  onValueChange={(value) => setFormData({ ...formData, interest_property_type: value })}
+                  value={formData.interestType}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, interestType: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="APARTMENT">Apartment</SelectItem>
-                    <SelectItem value="HOUSE">House</SelectItem>
-                    <SelectItem value="COMMERCIAL">Commercial</SelectItem>
-                    <SelectItem value="LAND">Land</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
+                    <SelectItem value="RENT">Rent</SelectItem>
+                    <SelectItem value="BUY">Buy</SelectItem>
+                    <SelectItem value="SELL">Sell</SelectItem>
+                    <SelectItem value="PROPERTY_MANAGEMENT">
+                      Property Management
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="interest_region">Interest Region</Label>
+                <Label htmlFor="preferredRegions">
+                  Interest Regions (comma separated)
+                </Label>
                 <Input
-                  id="interest_region"
-                  value={formData.interest_region}
-                  onChange={(e) => setFormData({ ...formData, interest_region: e.target.value })}
+                  id="preferredRegions"
+                  value={formData.preferredRegions}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      preferredRegions: e.target.value,
+                    })
+                  }
                   placeholder="e.g., São Paulo - Centro"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget_min">Minimum Budget</Label>
+                <Label htmlFor="expectedBudgetMin">Minimum Budget</Label>
                 <Input
-                  id="budget_min"
+                  id="expectedBudgetMin"
                   type="number"
                   min="0"
                   step="1000"
-                  value={formData.budget_min}
-                  onChange={(e) => setFormData({ ...formData, budget_min: e.target.value })}
+                  value={formData.expectedBudgetMin}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      expectedBudgetMin: e.target.value,
+                    })
+                  }
                   placeholder="200000"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget_max">Maximum Budget</Label>
+                <Label htmlFor="expectedBudgetMax">Maximum Budget</Label>
                 <Input
-                  id="budget_max"
+                  id="expectedBudgetMax"
                   type="number"
                   min="0"
                   step="1000"
-                  value={formData.budget_max}
-                  onChange={(e) => setFormData({ ...formData, budget_max: e.target.value })}
+                  value={formData.expectedBudgetMax}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      expectedBudgetMax: e.target.value,
+                    })
+                  }
                   placeholder="500000"
                 />
               </div>
@@ -222,7 +278,9 @@ export default function NewLeadPage() {
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
                 rows={4}
                 placeholder="Additional notes about this lead..."
               />
@@ -232,7 +290,11 @@ export default function NewLeadPage() {
               <Button type="submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Lead"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
                 Cancel
               </Button>
             </div>
@@ -240,5 +302,5 @@ export default function NewLeadPage() {
         </Card>
       </form>
     </div>
-  )
+  );
 }

@@ -1,12 +1,14 @@
 import { LeadsRepository } from "./leads.repository";
+import { CreateLeadActivityDto } from "./dto/create-lead-activity.dto";
+import { CreateLeadDto } from "./dto/create-lead.dto";
+import { QueryLeadsDto } from "./dto/query-leads.dto";
+import { UpdateLeadDto } from "./dto/update-lead.dto";
+import { UpdateLeadStatusDto } from "./dto/update-lead-status.dto";
 export declare class LeadsService {
     private readonly repo;
     constructor(repo: LeadsRepository);
-    list(): Promise<Record<string, unknown>[]>;
-    create(input: {
-        name?: string;
-        email?: string;
-    }): Promise<{
+    list(query: QueryLeadsDto): Promise<import("./leads.repository").LeadListResponse>;
+    getById(id: string): Promise<{
         name: string;
         email: string;
         phone: string;
@@ -18,9 +20,106 @@ export declare class LeadsService {
         interestType: import("@prisma/client").$Enums.LeadInterestType;
         status: import("@prisma/client").$Enums.LeadStatus;
         notes: string | null;
+        assignedToId: string | null;
         expectedBudgetMin: import("@prisma/client/runtime/library").Decimal | null;
         expectedBudgetMax: import("@prisma/client/runtime/library").Decimal | null;
         preferredRegions: string[];
+    }>;
+    create(dto: CreateLeadDto): import("@prisma/client").Prisma.Prisma__LeadClient<{
+        name: string;
+        email: string;
+        phone: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        cpfCnpj: string | null;
+        source: import("@prisma/client").$Enums.LeadSource;
+        interestType: import("@prisma/client").$Enums.LeadInterestType;
+        status: import("@prisma/client").$Enums.LeadStatus;
+        notes: string | null;
         assignedToId: string | null;
+        expectedBudgetMin: import("@prisma/client/runtime/library").Decimal | null;
+        expectedBudgetMax: import("@prisma/client/runtime/library").Decimal | null;
+        preferredRegions: string[];
+    }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    update(id: string, dto: UpdateLeadDto, actorId: string): Promise<{
+        name: string;
+        email: string;
+        phone: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        cpfCnpj: string | null;
+        source: import("@prisma/client").$Enums.LeadSource;
+        interestType: import("@prisma/client").$Enums.LeadInterestType;
+        status: import("@prisma/client").$Enums.LeadStatus;
+        notes: string | null;
+        assignedToId: string | null;
+        expectedBudgetMin: import("@prisma/client/runtime/library").Decimal | null;
+        expectedBudgetMax: import("@prisma/client/runtime/library").Decimal | null;
+        preferredRegions: string[];
+    }>;
+    remove(id: string): Promise<{
+        name: string;
+        email: string;
+        phone: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        cpfCnpj: string | null;
+        source: import("@prisma/client").$Enums.LeadSource;
+        interestType: import("@prisma/client").$Enums.LeadInterestType;
+        status: import("@prisma/client").$Enums.LeadStatus;
+        notes: string | null;
+        assignedToId: string | null;
+        expectedBudgetMin: import("@prisma/client/runtime/library").Decimal | null;
+        expectedBudgetMax: import("@prisma/client/runtime/library").Decimal | null;
+        preferredRegions: string[];
+    }>;
+    listActivities(leadId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        type: import("@prisma/client").$Enums.LeadActivityType;
+        description: string;
+        scheduledAt: Date | null;
+        completedAt: Date | null;
+        leadId: string;
+        userId: string;
+    }[]>;
+    createActivity(leadId: string, userId: string, dto: CreateLeadActivityDto): Promise<{
+        id: string;
+        createdAt: Date;
+        type: import("@prisma/client").$Enums.LeadActivityType;
+        description: string;
+        scheduledAt: Date | null;
+        completedAt: Date | null;
+        leadId: string;
+        userId: string;
+    }>;
+    listStatusHistory(leadId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        reason: string | null;
+        leadId: string;
+        userId: string;
+        previousStatus: import("@prisma/client").$Enums.LeadStatus;
+        newStatus: import("@prisma/client").$Enums.LeadStatus;
+    }[]>;
+    transitionStatus(leadId: string, userId: string, dto: UpdateLeadStatusDto): Promise<{
+        name: string;
+        email: string;
+        phone: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        cpfCnpj: string | null;
+        source: import("@prisma/client").$Enums.LeadSource;
+        interestType: import("@prisma/client").$Enums.LeadInterestType;
+        status: import("@prisma/client").$Enums.LeadStatus;
+        notes: string | null;
+        assignedToId: string | null;
+        expectedBudgetMin: import("@prisma/client/runtime/library").Decimal | null;
+        expectedBudgetMax: import("@prisma/client/runtime/library").Decimal | null;
+        preferredRegions: string[];
     }>;
 }

@@ -1,84 +1,94 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Plus, Filter, Search } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DataTable } from "@/components/data-table"
-import { StatusBadge } from "@/components/status-badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Lead, PaginatedResponse } from "@/lib/types"
-import { apiClient } from "@/lib/api-client"
-import { formatDate, formatCurrency } from "@/lib/format-utils"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Filter, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DataTable } from "@/components/data-table";
+import { StatusBadge } from "@/components/status-badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Lead, PaginatedResponse } from "@/lib/types";
+import { apiClient } from "@/lib/api-client";
+import { formatDate, formatCurrency } from "@/lib/format-utils";
 
 export default function LeadsPage() {
-  const router = useRouter()
-  const [leads, setLeads] = useState<Lead[]>([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [sourceFilter, setSourceFilter] = useState<string>("all")
+  const router = useRouter();
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
 
-  const pageSize = 20
+  const pageSize = 20;
 
   useEffect(() => {
-    loadLeads()
-  }, [page, statusFilter, sourceFilter])
+    loadLeads();
+  }, [page, statusFilter, sourceFilter]);
 
   const loadLeads = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         pageSize: pageSize.toString(),
-      })
-      if (search) params.append("search", search)
-      if (statusFilter !== "all") params.append("status", statusFilter)
-      if (sourceFilter !== "all") params.append("source", sourceFilter)
+      });
+      if (search) params.append("name", search);
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (sourceFilter !== "all") params.append("source", sourceFilter);
 
-      const response = await apiClient.request<PaginatedResponse<Lead>>(`/leads?${params}`)
-      setLeads(response.data)
-      setTotal(response.total)
+      const response = await apiClient.request<PaginatedResponse<Lead>>(
+        `/leads?${params}`,
+      );
+      setLeads(response.data);
+      setTotal(response.total);
     } catch (error) {
-      console.error("[v0] Failed to load leads:", error)
+      console.error("[v0] Failed to load leads:", error);
       setLeads([
         {
           id: "1",
-          full_name: "João Silva",
+          name: "João Silva",
           phone: "(11) 98765-4321",
           email: "joao@example.com",
           source: "WEBSITE",
           status: "NEW",
-          interest_region: "São Paulo - Centro",
-          interest_property_type: "APARTMENT",
-          budget_min: 200000,
-          budget_max: 350000,
-          assigned_user_name: "Maria Santos",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          interestType: "BUY",
+          expectedBudgetMin: 200000,
+          expectedBudgetMax: 350000,
+          preferredRegions: ["São Paulo - Centro"],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         },
-      ])
-      setTotal(1)
+      ]);
+      setTotal(1);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSearch = () => {
-    setPage(1)
-    loadLeads()
-  }
+    setPage(1);
+    loadLeads();
+  };
 
   const columns = [
     {
-      key: "full_name",
+      key: "name",
       label: "Nome",
       render: (lead: Lead) => (
-        <button onClick={() => router.push(`/leads/${lead.id}`)} className="font-medium text-primary hover:underline">
-          {lead.full_name}
+        <button
+          onClick={() => router.push(`/leads/${lead.id}`)}
+          className="font-medium text-primary hover:underline"
+        >
+          {lead.name}
         </button>
       ),
     },
@@ -95,7 +105,11 @@ export default function LeadsPage() {
     {
       key: "source",
       label: "Origem",
-      render: (lead: Lead) => <span className="capitalize">{lead.source.toLowerCase().replace("_", " ")}</span>,
+      render: (lead: Lead) => (
+        <span className="capitalize">
+          {lead.source.toLowerCase().replace("_", " ")}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -107,8 +121,10 @@ export default function LeadsPage() {
       label: "Interesse",
       render: (lead: Lead) => (
         <div className="text-sm">
-          <div>{lead.interest_property_type || "-"}</div>
-          <div className="text-muted-foreground">{lead.interest_region || "-"}</div>
+          <div>{lead.interestType || "-"}</div>
+          <div className="text-muted-foreground">
+            {lead.preferredRegions?.join(", ") || "-"}
+          </div>
         </div>
       ),
     },
@@ -116,32 +132,35 @@ export default function LeadsPage() {
       key: "budget",
       label: "Orçamento",
       render: (lead: Lead) => {
-        if (!lead.budget_min && !lead.budget_max) return "-"
+        if (!lead.expectedBudgetMin && !lead.expectedBudgetMax) return "-";
         return (
           <div className="text-sm">
-            {lead.budget_min ? formatCurrency(lead.budget_min) : "0"} -{" "}
-            {lead.budget_max ? formatCurrency(lead.budget_max) : "∞"}
+            {lead.expectedBudgetMin
+              ? formatCurrency(lead.expectedBudgetMin)
+              : "0"}{" "}
+            -{" "}
+            {lead.expectedBudgetMax
+              ? formatCurrency(lead.expectedBudgetMax)
+              : "∞"}
           </div>
-        )
+        );
       },
     },
     {
-      key: "assigned_user_name",
-      label: "Responsável",
-    },
-    {
-      key: "updated_at",
+      key: "updatedAt",
       label: "Última Atualização",
-      render: (lead: Lead) => formatDate(lead.updated_at),
+      render: (lead: Lead) => formatDate(lead.updatedAt),
     },
-  ]
+  ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-          <p className="text-muted-foreground">Gerencie e acompanhe seus leads de vendas</p>
+          <p className="text-muted-foreground">
+            Gerencie e acompanhe seus leads de vendas
+          </p>
         </div>
         <Button onClick={() => router.push("/leads/new")}>
           <Plus className="mr-2 h-4 w-4" />
@@ -204,5 +223,5 @@ export default function LeadsPage() {
         loading={loading}
       />
     </div>
-  )
+  );
 }

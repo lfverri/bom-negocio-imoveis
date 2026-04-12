@@ -23,8 +23,7 @@ enum LeadSource {
   WEBSITE
   REFERRAL
   SOCIAL_MEDIA
-  PHONE
-  WALK_IN
+  ADVERTISING
   OTHER
 }
 
@@ -37,10 +36,8 @@ enum LeadInterestType {
 
 enum LeadStatus {
   NEW
-  CONTACTED
+  IN_CONTACT
   QUALIFIED
-  PROPOSAL
-  NEGOTIATION
   WON
   LOST
 }
@@ -252,6 +249,10 @@ model Lead {
   activities    LeadActivity[]
   statusHistory LeadStatusHistory[]
 
+  @@index([status])
+  @@index([source])
+  @@index([assignedToId])
+  @@index([createdAt])
   @@map("leads")
 }
 
@@ -268,6 +269,8 @@ model LeadActivity {
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
 
+  @@index([leadId, createdAt])
+  @@index([userId])
   @@map("lead_activities")
 }
 
@@ -283,6 +286,7 @@ model LeadStatusHistory {
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id])
 
+  @@index([leadId, createdAt])
   @@map("lead_status_history")
 }
 
